@@ -1,0 +1,19 @@
+# compiled output
+/dist
+/node_modules
+/build
+
+# logs
+*.log
+
+# testing
+/coverage
+
+# env files
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+*.tsbuildinfo
