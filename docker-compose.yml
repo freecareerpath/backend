@@ -1,0 +1,61 @@
+# Backend-only local dev stack — NOT a full-stack orchestrator. This repo
+# (backend/) is an independent Git repository, deployable and cloneable on
+# its own; it never assumes a sibling `web/` checkout exists, so this file
+# only ever builds/runs `backend` + its own Postgres.
+#
+# There is deliberately no shared reverse proxy (Nginx) here — that was
+# previously a root-level concern for routing between web/ and backend/
+# together, and was removed when local dev was decentralized into each
+# app owning its own tooling (see docs/decisions/ in the coordination
+# folder this repo may be checked out alongside). Run `web/` separately
+# (`cd ../web && npm run dev`) for full-stack local development — it talks
+# to this backend directly via NEXT_PUBLIC_API_URL, no proxy required.
+#
+# Usage:
+#   cp .env.example .env   # then fill in real values
+#   docker compose up --build
+#   docker compose exec backend npm run db:migrate
+#   docker compose exec backend npm run db:seed
+#
+# Backend API: http://localhost:3000/api
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fcp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-freecareerpath}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fcp} -d ${POSTGRES_DB:-freecareerpath}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+
+  backend:
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fcp}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-freecareerpath}
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3100}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@freecareerpath.dev}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-}
+      INTERNAL_REVIEW_TOKEN: ${INTERNAL_REVIEW_TOKEN:-}
+    ports:
+      - "${PORT:-3000}:3000"
+
+volumes:
+  postgres_data:
