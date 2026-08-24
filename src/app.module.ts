@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProgressModule } from './progress/progress.module';
 import { MilestonesModule } from './milestones/milestones.module';
 import { NudgesModule } from './nudges/nudges.module';
+import { CareerPathsModule } from './career-paths/career-paths.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { NudgesModule } from './nudges/nudges.module';
     ProgressModule,
     MilestonesModule,
     NudgesModule,
+    CareerPathsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

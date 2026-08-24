@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -16,6 +17,7 @@ import {
 
 const PASSWORD_HASH_ROUNDS = 12;
 const MIN_PASSWORD_LENGTH = 8;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type AuthTokens = {
   userId: string;
@@ -36,9 +38,21 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async register(email: string, password: string): Promise<AuthTokens> {
-    if (!email.includes('@') || password.length < MIN_PASSWORD_LENGTH) {
-      throw new UnauthorizedException('Invalid email or password too short.');
+  async register(
+    email: string,
+    password: string,
+    name: string,
+  ): Promise<AuthTokens> {
+    if (typeof name !== 'string' || name.trim().length === 0) {
+      throw new BadRequestException('Name is required.');
+    }
+    if (typeof email !== 'string' || !EMAIL_PATTERN.test(email)) {
+      throw new BadRequestException('Enter a valid email address.');
+    }
+    if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+      throw new BadRequestException(
+        `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+      );
     }
 
     const existing = await this.users.findByEmail(email);
@@ -48,7 +62,7 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
-    const user = await this.users.create(email, passwordHash);
+    const user = await this.users.create(email, passwordHash, name.trim());
     return this.issueTokens(user.id);
   }
 

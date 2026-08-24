@@ -27,18 +27,24 @@ describe('AuthService', () => {
     const repos = makeRepos();
     repos.users.findByEmail.mockResolvedValue(undefined);
     repos.users.create.mockImplementation(
-      (email: string, passwordHash: string): User => ({
+      (email: string, passwordHash: string, name: string): User => ({
         id: 'u1',
         email,
+        name,
         passwordHash,
+        role: 'user',
         createdAt: new Date(),
       }),
     );
     const service = makeService(repos);
 
-    await service.register('a@example.com', 'correct-horse-battery');
+    await service.register('a@example.com', 'correct-horse-battery', 'Ada');
 
-    const [, storedHash] = repos.users.create.mock.calls[0] as [string, string];
+    const [, storedHash] = repos.users.create.mock.calls[0] as [
+      string,
+      string,
+      string,
+    ];
     expect(storedHash).not.toBe('correct-horse-battery');
     expect(await bcrypt.compare('correct-horse-battery', storedHash)).toBe(
       true,
@@ -50,13 +56,14 @@ describe('AuthService', () => {
     repos.users.findByEmail.mockResolvedValue({
       id: 'u1',
       email: 'a@example.com',
+      name: 'Ada',
       passwordHash: 'x',
       createdAt: new Date(),
     });
     const service = makeService(repos);
 
     await expect(
-      service.register('a@example.com', 'correct-horse-battery'),
+      service.register('a@example.com', 'correct-horse-battery', 'Ada'),
     ).rejects.toThrow();
   });
 

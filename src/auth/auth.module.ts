@@ -6,6 +6,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersRepository } from './users.repository';
 import { SessionsRepository } from './sessions.repository';
+import { AdminGuard } from './admin.guard';
+import { LoginRateLimitGuard } from './login-rate-limit.guard';
 import { ACCESS_TOKEN_TTL_SECONDS } from './tokens';
 
 @Module({
@@ -17,7 +19,14 @@ import { ACCESS_TOKEN_TTL_SECONDS } from './tokens';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, UsersRepository, SessionsRepository],
-  exports: [AuthService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    UsersRepository,
+    SessionsRepository,
+    AdminGuard,
+    LoginRateLimitGuard,
+  ],
+  exports: [AuthService, UsersRepository, AdminGuard],
 })
 export class AuthModule {}
