@@ -17,10 +17,20 @@ import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_MS } from './tokens';
 type Credentials = { email: string; password: string; rememberMe?: boolean };
 type RegisterBody = Credentials & { name: string };
 
+// Production (freecareerpath.com / api.freecareerpath.com) is same-site, so
+// the default `lax` works. Vercel Preview deployments put the frontend and
+// backend on two different *.vercel.app subdomains, which the Public Suffix
+// List treats as different sites — cross-site fetches then need
+// `SameSite=None` (which browsers require pairing with `Secure`). Set
+// COOKIE_SAMESITE=none only for that Preview case; never default to it.
+const COOKIE_SAMESITE = (process.env.COOKIE_SAMESITE ?? 'lax') as
+  | 'lax'
+  | 'none'
+  | 'strict';
 const COOKIE_OPTS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production' || COOKIE_SAMESITE === 'none',
+  sameSite: COOKIE_SAMESITE,
 };
 
 @Controller('auth')
