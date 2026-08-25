@@ -29,6 +29,18 @@ export async function createNestApp(
     : await NestFactory.create(AppModule);
 
   app.use(cookieParser());
+  // Every response from this API is per-request/per-user (auth, progress,
+  // admin CRUD) and must never be shared-cached. Without an explicit
+  // Cache-Control, Vercel's platform default of `public, max-age=0,
+  // must-revalidate` marks responses as edge-cacheable — and Vercel's CDN
+  // then strips `Set-Cookie` from any response it treats as cacheable,
+  // silently dropping the auth cookies that register/login/refresh set
+  // (verified: even `/api/health`, which sets no cookies, got the same
+  // `public` default). `no-store` opts every response out of that.
+  app.use((_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
   // Every real endpoint lives under /api — `/` itself is excluded so it
   // stays available as a bare health check independent of that routing
   // split (docs/architecture.md "Deployment topology").
