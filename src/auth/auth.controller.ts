@@ -27,10 +27,23 @@ const COOKIE_SAMESITE = (process.env.COOKIE_SAMESITE ?? 'lax') as
   | 'lax'
   | 'none'
   | 'strict';
+// Unset (default) scopes the cookie to the exact host that issued it — the
+// current behavior, correct for Docker/local (frontend and backend share no
+// domain relationship there anyway) and required on *.vercel.app Previews
+// (vercel.app is a public suffix; browsers reject a Domain that spans
+// sibling public-suffix subdomains). Once real custom domains are live
+// (frontend on freecareerpath.com, backend on api.freecareerpath.com — true
+// subdomains of one registrable domain), set COOKIE_DOMAIN=.freecareerpath.com
+// so the cookie is visible to both — without it, the frontend's *server-side*
+// session check (getCurrentUser() in web/, reading cookies via
+// next/headers) can never see a cookie the backend issued for its own host
+// only, even though SameSite already treats the two hosts as "same-site".
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production' || COOKIE_SAMESITE === 'none',
   sameSite: COOKIE_SAMESITE,
+  ...(COOKIE_DOMAIN ? { domain: COOKIE_DOMAIN } : {}),
 };
 
 @Controller('auth')
