@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "echo 'No static build needed — api/index.ts is compiled independently as a Vercel Function.'",
+  "outputDirectory": "public",
   "functions": {
     "api/index.ts": {
       "maxDuration": 30
