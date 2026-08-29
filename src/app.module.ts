@@ -8,6 +8,7 @@ import { ProgressModule } from './progress/progress.module';
 import { MilestonesModule } from './milestones/milestones.module';
 import { NudgesModule } from './nudges/nudges.module';
 import { CareerPathsModule } from './career-paths/career-paths.module';
+import { ExplainModule } from './explain/explain.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CareerPathsModule } from './career-paths/career-paths.module';
     MilestonesModule,
     NudgesModule,
     CareerPathsModule,
+    ExplainModule,
   ],
   controllers: [AppController],
   providers: [AppService],
