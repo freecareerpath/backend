@@ -22,8 +22,9 @@ import type { ExplainFeedback, ExplainRubric } from './explain.types';
  *    there. Our audience is largely learning in a second language, and
  *    marking them down for phrasing is the fastest way to lose them.
  *
- * temperature is 0 so the same answer tends to the same verdict; the real
- * consistency guarantee is the verdict cache in the repository.
+ * The same answer always gets the same verdict, but that comes from the
+ * verdict cache in the repository rather than from sampling settings —
+ * gpt-5-nano only accepts its default temperature.
  */
 
 const DEFAULT_MODEL = 'gpt-5-nano';
@@ -72,7 +73,10 @@ export class OpenAiGrader {
         },
         body: JSON.stringify({
           model: this.model,
-          temperature: 0,
+          // No temperature: gpt-5-nano rejects anything but its default.
+          // Consistency comes from the verdict cache in the repository, which
+          // is the guarantee that actually matters — same answer, same
+          // verdict, even across a model change.
           response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
